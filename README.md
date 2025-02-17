@@ -11,6 +11,7 @@ thus the combined data will give us DB 3, which will be used for our work.
 ## The question?
 
 **Can we predict a game's long-term player retention and success based on early-stage Steam reviews, sentiment dynamics, and community engagement patterns?**
-•	Complexity: Involves multiple factors like review sentiment, topic modelling, engagement patterns, and time-series trends.
-•	Novelty: Most research focuses only on sentiment analysis, while this aims to predict long-term game success beyond immediate reviews.
-•	Real-world Impact: Game developers and publishers can use this insight to improve game design, marketing strategies, and player retention.
+
+* Complexity: Involves multiple factors like review sentiment, topic modelling, engagement patterns, and time-series trends.
+* Novelty: Most research focuses only on sentiment analysis, while this aims to predict long-term game success beyond immediate reviews.
+* Real-world Impact: Game developers and publishers can use this insight to improve game design, marketing strategies, and player retention.
