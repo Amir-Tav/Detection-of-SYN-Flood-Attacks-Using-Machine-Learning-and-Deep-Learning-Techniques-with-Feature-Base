@@ -1,6 +1,6 @@
 ---
 title: "SYNFloodPDA"
-authors: "Shahin, Taulant, Amir, Jatin, Carter"
+authors: "Taulant, Amir, Jatin, Carter"
 date: "2025-03-12"
 output: pdf_document
 ---
