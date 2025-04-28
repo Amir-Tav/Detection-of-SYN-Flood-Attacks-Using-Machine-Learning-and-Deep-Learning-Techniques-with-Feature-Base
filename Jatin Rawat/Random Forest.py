@@ -333,6 +333,10 @@ def main():
     """
     Main function to orchestrate the 5-fold cross-validation workflow
     """
+    # Start overall timing
+    overall_start_time = time.time()
+    print("Starting Random Forest pipeline...")
+    
     # Load data
     df = load_data()
     
@@ -349,6 +353,7 @@ def main():
     
     # Perform 5-fold cross-validation
     for fold in sorted(folds):
+        fold_start_time = time.time()
         print(f"\n{'='*50}")
         print(f"Processing Fold {fold} as test set")
         print(f"{'='*50}")
@@ -363,6 +368,9 @@ def main():
         # Evaluate on test fold
         fold_result = evaluate_fold(model, X_test, y_test, fold)
         fold_results.append(fold_result)
+        
+        fold_time = time.time() - fold_start_time
+        print(f"Fold {fold} completed in {fold_time:.2f} seconds")
     
     # Plot ROC curves
     plot_roc_curves(fold_results)
@@ -377,7 +385,6 @@ def main():
     calculate_statistics(fold_results)
     
     # Feature importance analysis
-    # Use the last model for simplicity, or could average across all models
     print("\nAnalyzing feature importance...")
     feature_imp = feature_importance(all_models[-1], feature_names)
     print("Top 10 most important features:")
@@ -387,8 +394,20 @@ def main():
     joblib.dump(all_models[-1], 'k5_random_forest_model.pkl')
     print("\nFinal model saved as 'k5_random_forest_model.pkl'")
     
-    return all_models, fold_results
+    # End overall timing and report
+    total_time = time.time() - overall_start_time
+    minutes = int(total_time // 60)
+    seconds = total_time % 60
+    
+    print("\n" + "="*50)
+    print(f"Total execution time: {total_time:.2f} seconds")
+    print(f"That's {minutes} minutes and {seconds:.2f} seconds")
+    
+    avg_fold_time = total_time / len(folds)
+    print(f"Average time per fold: {avg_fold_time:.2f} seconds")
+    
+    return all_models, fold_results, total_time
 
 # Run the pipeline
 if __name__ == "__main__":
-    main()
+    all_models, fold_results, total_time = main()
