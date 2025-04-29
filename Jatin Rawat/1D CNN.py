@@ -12,6 +12,8 @@ import seaborn as sns
 from scipy.interpolate import interp1d
 from itertools import cycle
 import time
+import psutil  # For CPU and RAM usage monitoring
+import os
 
 # Apply basic TensorFlow optimizations without causing compatibility issues
 def optimize_tensorflow():
@@ -39,6 +41,15 @@ def optimize_tensorflow():
     # Avoid using advanced optimizations that might cause compatibility issues
     print("Applied safe TensorFlow optimizations")
     return
+
+# Function to get current resource usage
+def get_resource_usage():
+    """Get current CPU and memory usage."""
+    process = psutil.Process(os.getpid())
+    cpu_percent = psutil.cpu_percent(interval=0.1)
+    memory_info = process.memory_info()
+    memory_mb = memory_info.rss / (1024 * 1024)  # Convert to MB
+    return cpu_percent, memory_mb
 
 # Create a more compatible CNN model
 def create_dense_model(input_shape, num_classes=2):
@@ -74,10 +85,83 @@ def create_dense_model(input_shape, num_classes=2):
 
     return model
 
+# Class to monitor and log resource usage
+class ResourceMonitor:
+    def __init__(self, log_interval=5):
+        self.log_interval = log_interval  # seconds between resource checks
+        self.cpu_usage = []
+        self.memory_usage = []
+        self.timestamps = []
+        self.start_time = None
+        self.is_monitoring = False
+        self.peak_memory = 0
+        self.avg_cpu = 0
+        self.final_cpu = 0
+        self.final_memory = 0
+    
+    def start(self):
+        """Start monitoring resources."""
+        self.start_time = time.time()
+        self.is_monitoring = True
+        self.cpu_usage = []
+        self.memory_usage = []
+        self.timestamps = []
+        self.peak_memory = 0
+        self._monitor()
+    
+    def stop(self):
+        """Stop monitoring resources."""
+        self.is_monitoring = False
+        
+        # Calculate statistics
+        if self.memory_usage:
+            self.peak_memory = max(self.memory_usage)
+            self.avg_cpu = sum(self.cpu_usage) / len(self.cpu_usage) if self.cpu_usage else 0
+            self.final_cpu = self.cpu_usage[-1] if self.cpu_usage else 0
+            self.final_memory = self.memory_usage[-1] if self.memory_usage else 0
+    
+    def _monitor(self):
+        """Internal monitoring function."""
+        if not self.is_monitoring:
+            return
+        
+        # Get current resource usage
+        cpu, memory = get_resource_usage()
+        elapsed = time.time() - self.start_time
+        
+        # Store data
+        self.cpu_usage.append(cpu)
+        self.memory_usage.append(memory)
+        self.timestamps.append(elapsed)
+        
+        # Schedule next check
+        import threading
+        threading.Timer(self.log_interval, self._monitor).start()
+    
+    def plot_usage(self):
+        """Plot resource usage over time - disabled."""
+        # Resource usage plots are disabled
+        pass
+        
+    def print_summary(self):
+        """Print a summary of resource usage."""
+        print("\n===== RESOURCE USAGE SUMMARY =====")
+        print(f"Peak Memory Usage: {self.peak_memory:.2f} MB")
+        print(f"Average CPU Usage: {self.avg_cpu:.2f}%")
+        print(f"Final CPU Usage: {self.final_cpu:.2f}%")
+        print(f"Final Memory Usage: {self.final_memory:.2f} MB")
+        print("=================================")
+
 # Main function for the k-fold pipeline with compatibility focus
 def main():
+    # Create resource monitor
+    resource_monitor = ResourceMonitor(log_interval=2)  # Check every 2 seconds
+    
     # Start timer for overall execution
     total_start_time = time.time()
+    
+    # Start resource monitoring
+    resource_monitor.start()
     
     print("Loading dataset...")
     data_load_start = time.time()
@@ -106,6 +190,11 @@ def main():
     print(f"Dataset shape: {df.shape}")
     print(f"Label distribution:\n{df['Label'].value_counts().sort_index()}")
     print(f"Fold distribution:\n{df['Fold'].value_counts().sort_index()}")
+
+    # Get initial resource usage
+    initial_cpu, initial_memory = get_resource_usage()
+    print(f"Initial CPU Usage: {initial_cpu:.2f}%")
+    print(f"Initial Memory Usage: {initial_memory:.2f} MB")
 
     # Initialize metrics collection
     all_accuracies = []
@@ -140,8 +229,13 @@ def main():
     
     # Loop through each fold for cross-validation
     for fold in fold_indices:
+        # Check resource usage before fold processing
+        fold_start_cpu, fold_start_memory = get_resource_usage()
+        
         fold_start_time = time.time()
         print(f"\n===== Processing Fold {fold} =====")
+        print(f"CPU Usage at start of fold: {fold_start_cpu:.2f}%")
+        print(f"Memory Usage at start of fold: {fold_start_memory:.2f} MB")
         
         # Split data into train and test sets
         train_mask = df['Fold'] != fold
@@ -180,6 +274,11 @@ def main():
             ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3, min_lr=0.0001)
         ]
         
+        # Check resource usage before training
+        pre_train_cpu, pre_train_memory = get_resource_usage()
+        print(f"CPU Usage before training: {pre_train_cpu:.2f}%")
+        print(f"Memory Usage before training: {pre_train_memory:.2f} MB")
+        
         # Train the model with simpler settings
         training_start_time = time.time()
         print(f"Training model for fold {fold}...")
@@ -189,7 +288,7 @@ def main():
         X_val = X_train_reshaped[-val_size:]
         y_val = y_train[-val_size:]
         X_train_final = X_train_reshaped[:-val_size]
-        y_train_final = y_train[:-val_size]
+        y_train_final = y_train[:-val_size:]
         
         # Use smaller batch size and fewer epochs for compatibility
         batch_size = 64
@@ -207,6 +306,12 @@ def main():
         
         training_time = time.time() - training_start_time
         print(f"Model training completed in {training_time:.2f} seconds ({training_time/60:.2f} minutes)")
+        
+        # Check resource usage after training
+        post_train_cpu, post_train_memory = get_resource_usage()
+        print(f"CPU Usage after training: {post_train_cpu:.2f}%")
+        print(f"Memory Usage after training: {post_train_memory:.2f} MB")
+        print(f"Memory increase during training: {post_train_memory - pre_train_memory:.2f} MB")
         
         # Evaluate on test set
         eval_start_time = time.time()
@@ -272,10 +377,18 @@ def main():
         recall_curves.append(recall)
         average_precision_values.append(avg_precision)
         
+        # Check resource usage at end of fold
+        fold_end_cpu, fold_end_memory = get_resource_usage()
+        print(f"CPU Usage at end of fold: {fold_end_cpu:.2f}%")
+        print(f"Memory Usage at end of fold: {fold_end_memory:.2f} MB")
+        
         # Record total fold time
         fold_time = time.time() - fold_start_time
         fold_times.append(fold_time)
         print(f"Total time for fold {fold}: {fold_time:.2f} seconds ({fold_time/60:.2f} minutes)")
+    
+    # Stop resource monitoring
+    resource_monitor.stop()
     
     # Calculate and display metrics across all folds
     mean_accuracy = np.mean(all_accuracies)
@@ -299,6 +412,9 @@ def main():
     plot_combined_confusion_matrix(combined_cm, class_labels)
     plot_time = time.time() - plot_start_time
     
+    # Get final resource usage
+    final_cpu, final_memory = get_resource_usage()
+    
     # Display clean time summary
     total_time = time.time() - total_start_time
     print(f"\n===== TIME SUMMARY =====")
@@ -311,6 +427,18 @@ def main():
         print(f"Fold {fold}: {fold_times[i]:.2f} seconds ({fold_times[i]/60:.2f} minutes)")
     
     print(f"Average fold time: {np.mean(fold_times):.2f} seconds ({np.mean(fold_times)/60:.2f} minutes)")
+    
+    # Print resource usage summary
+    resource_monitor.print_summary()
+    
+    # Print overall training stats in a box (like in the image)
+    print("\n┌───────────────────────────────────┐")
+    print("│       Overall Training Stats       │")
+    print("├───────────────────────────────────┤")
+    print(f"│ Total Training Time: {total_time:.2f} seconds  │")
+    print(f"│ Total RAM Usage: {resource_monitor.final_memory:.2f} MB      │")
+    print(f"│ CPU Usage (at final check): {final_cpu:.1f}%   │")
+    print("└───────────────────────────────────┘")
     
     return model
 
