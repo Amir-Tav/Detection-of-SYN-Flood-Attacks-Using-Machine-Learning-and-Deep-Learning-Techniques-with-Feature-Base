@@ -141,7 +141,7 @@ def main():
         drive.mount("/content/drive")
         DATA_PATH = "/content/drive/MyDrive/K5_Dataset.csv"
     except Exception:
-        DATA_PATH = "K5_Dataset.csv"
+        DATA_PATH = "D:\Coding Projects\Detection-of-SYN-Flood-Attacks-Using-Machine-Learning-and-Deep-Learning-Techniques-with-Feature-Base\Data\K5_Dataset.csv"
 
     DATA_PATH = str(DATA_PATH)
 
