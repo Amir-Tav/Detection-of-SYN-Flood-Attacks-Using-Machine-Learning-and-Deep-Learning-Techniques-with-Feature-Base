@@ -173,7 +173,7 @@ def main():
         DATA_PATH = "/content/drive/MyDrive/K5_Dataset.csv"
     except:
         # If not using Colab, specify your local path
-        DATA_PATH = "K5_Dataset.csv"
+        DATA_PATH = "D:\Coding Projects\Detection-of-SYN-Flood-Attacks-Using-Machine-Learning-and-Deep-Learning-Techniques-with-Feature-Base\Data\K5_Dataset.csv"
         
     print(f"TensorFlow version: {tf.__version__}")
     print("Available devices:")

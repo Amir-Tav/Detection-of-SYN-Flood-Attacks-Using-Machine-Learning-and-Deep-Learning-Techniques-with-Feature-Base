@@ -18,7 +18,7 @@ from sklearn.metrics import (
 import matplotlib.pyplot as plt
 
 # Load dataset
-df = pd.read_csv(r"C:\Users\44776\Downloads\Kfold\K5_Dataset.csv")
+df = pd.read_csv("D:\Coding Projects\Detection-of-SYN-Flood-Attacks-Using-Machine-Learning-and-Deep-Learning-Techniques-with-Feature-Base\Data\K5_Dataset.csv")
 
 # Separate features and target
 X = df.drop(columns=['Label', 'Fold'])
