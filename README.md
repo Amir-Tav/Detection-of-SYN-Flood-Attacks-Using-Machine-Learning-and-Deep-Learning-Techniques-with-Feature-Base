@@ -28,19 +28,19 @@ For this project, we specifically extract SYN flood attack samples and benign tr
 Given the large size and complexity of the original dataset, we performed focused preprocessing steps to prepare the data for efficient real-time prediction:
 
 - **Feature Selection:** We selected 13 features highly relevant to SYN flood detection, balancing informativeness and computational efficiency:
-  1. **SYN Flag Count:** Identifies SYN packets, critical to this attack type.
-  2. **Total Fwd Packets:** High counts can indicate flooding attempts.
-  3. **Total Backward Packets:** Low response suggests incomplete handshakes.
-  4. **Flow Duration:** Short flows are typical of SYN floods.
-  5. **Flow Packets/s:** Rapid packet rates can signal an attack.
-  6. **Flow Bytes/s:** Highlights volume and pattern of transmitted data.
-  7. **Fwd Packet Length Mean:** Uniform packet sizes are common in SYN floods.
-  8. **Bwd Packet Length Mean:** Few or no backward packets suggest missing responses.
-  9. **Bwd IAT Mean:** Irregular reply intervals may indicate an attack.
-  10. **ACK Flag Count:** Low ACK counts imply incomplete TCP handshakes.
-  11. **Active Mean:** Short active times are characteristic of flooding.
-  12. **Inbound:** Directionality helps identify the attack target.
-  13. **Label:** Specifies whether the flow is benign or SYN attack.
+  * **SYN Flag Count:** Identifies SYN packets, critical to this attack type.
+  * **Total Fwd Packets:** High counts can indicate flooding attempts.
+  * **Total Backward Packets:** Low response suggests incomplete handshakes.
+  * **Flow Duration:** Short flows are typical of SYN floods.
+  * **Flow Packets/s:** Rapid packet rates can signal an attack.
+  * **Flow Bytes/s:** Highlights volume and pattern of transmitted data.
+  * **Fwd Packet Length Mean:** Uniform packet sizes are common in SYN floods.
+  * **Bwd Packet Length Mean:** Few or no backward packets suggest missing responses.
+  * **Bwd IAT Mean:** Irregular reply intervals may indicate an attack.
+  * **ACK Flag Count:** Low ACK counts imply incomplete TCP handshakes.
+  * **Active Mean:** Short active times are characteristic of flooding.
+  * **Inbound:** Directionality helps identify the attack target.
+  * **Label:** Specifies whether the flow is benign or SYN attack.
 
 - **Sampling:** We randomly selected 5,000 SYN attack instances and 5,000 benign instances, creating a balanced and manageable 10,000-row dataset.
 
